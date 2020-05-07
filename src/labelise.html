@@ -1,0 +1,115 @@
+<html>
+<head>
+<style type="text/css">
+body {
+    background-color: black;
+}
+.nosel {
+    border: 1px black solid;
+}
+.sel {
+    border: 1px white solid;
+}
+
+.classyes {
+    border: 1px green solid;
+}
+
+#dImages {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+</style>
+
+<script language="javascript">
+
+//config
+var imageHeight = 240;
+var batchSize = 16;
+
+// state
+var index = 0;
+var images = [];
+var classes = {};
+
+function onImageClick(idx)
+{
+    var iname = images[idx];
+    var target = "classyes";
+    if (iname in classes)
+    {
+        target = "nosel";
+        delete classes[iname];
+    }
+    else
+        classes[iname] = 1;
+    document.getElementById("img" + idx).className = target;
+}
+
+function displayBatch()
+{
+    var c = '';
+    for (var i=0; i<batchSize; ++i)
+    {
+        if (images.length <= index)
+            break;
+        c += '<img id="img' + index + '" height=' + imageHeight + ' src="' + images[index] + '" class="nosel" onclick="onImageClick('+index+')" />';
+        index++;
+    }
+    c += '<button type="button" onclick="displayBatch()">NEXT</button>';
+    document.getElementById("dImages").innerHTML = c;
+}
+function loadManifest(m)
+{
+    images = m.split("\n");
+    displayBatch();
+}
+gev = null;
+function onKeyDown(e)
+{
+    gev = e;
+}
+function doInitialize()
+{
+    fetch("manifest.txt", {}).then(function(r) { return r.text();}).then(function(t) { loadManifest(t);});
+    document.body.addEventListener('keydown', onKeyDown);
+}
+
+function download(filename, text) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
+
+function showClasses()
+{
+    var txt = '';
+    for (var k in classes)
+    {
+        txt += k + ' ' + classes[k] + '\n';
+    }
+    download("result.txt", txt);
+}
+
+</script>
+
+</head>
+
+<body onLoad="doInitialize()">
+
+<div id="dImages">
+</div>
+<div>
+<button type='button' onclick='showClasses()'>Result</button>
+</div>
+
+</body>
+</html>
